@@ -1,0 +1,79 @@
+﻿@model PlayerInformationSystem.Models.DTO.ApprovalModel
+@{
+    ViewBag.Title = "Approve";
+}
+
+<h2>Form Approval</h2>
+
+@using (Html.BeginForm("Approve", "Players", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    <div>
+        <dl class="dl-horizontal">
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            @Html.HiddenFor(model => model.playerId)
+            <dt>
+                @Html.DisplayNameFor(model => model.playerNumber)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.playerNumber)
+            </dd>
+            <dt>
+                @Html.DisplayNameFor(model => model.playerName)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.playerName)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.club)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.club)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.position)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.position)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.hireDate)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.hireDate)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.expiredDate)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.expiredDate)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.note)
+            </dt>
+
+            <dd>
+                @Html.TextAreaFor(model => model.note, new { @class = "form-control", @cols = "100", @rows = "5" })
+            </dd>
+        </dl>
+    </div>
+
+    <div class="form-group">
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Approved" class="btn btn-sm btn-primary" />
+            </div>
+        </div>
+    </div>
+}

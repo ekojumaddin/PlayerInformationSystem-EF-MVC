@@ -1,0 +1,90 @@
+﻿@model PlayerInformationSystem.Models.DTO.ApprovalModel
+@{
+    ViewBag.Title = "Release";
+}
+
+<h2>Release</h2>
+
+<div>
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.playerName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.playerName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.club)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.club)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.position)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.position)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.hireDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.hireDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.expiredDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.expiredDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.approvedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.approvedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.approvedBy)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.approvedBy)
+        </dd>
+
+        <dt>
+            Note Approver
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.note)
+        </dd>
+
+        <dt>
+            Note Releaser
+        </dt>
+
+        <dd>
+            @Html.TextAreaFor(model => model.note, new { @class = "form-control", @cols = "100", @rows = "5" })
+        </dd>
+    </dl>
+</div>
+
+<div class="form-group">
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <input type="submit" value="Released" class="btn btn-sm btn-primary" />
+        </div>
+    </div>
+</div>
