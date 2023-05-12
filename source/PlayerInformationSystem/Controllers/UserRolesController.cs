@@ -7,18 +7,24 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using PlayerInformationSystem.Models;
+using PlayerInformationSystem.Repository;
 
 namespace PlayerInformationSystem.Controllers
 {
     public class UserRolesController : Controller
     {
-        private PlayerInformationSystemEntities db = new PlayerInformationSystemEntities();
+        #region Constructor  
+        UserRoleRepository userRoleRepo;
+        public UserRolesController()
+        {
+            userRoleRepo = new UserRoleRepository();
+        }
+        #endregion
 
         // GET: UserRoles
         public ActionResult Index()
         {
-            var userRoles = db.UserRoles.Include(u => u.Role).Include(u => u.User);
-            return View(userRoles.ToList());
+            return View(userRoleRepo.GetAllData());
         }
 
         // GET: UserRoles/Details/5
@@ -28,7 +34,7 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            UserRole userRole = db.UserRoles.Find(id);
+            UserRole userRole = userRoleRepo.GetDataById(id);
             if (userRole == null)
             {
                 return HttpNotFound();
@@ -39,8 +45,12 @@ namespace PlayerInformationSystem.Controllers
         // GET: UserRoles/Create
         public ActionResult Create()
         {
-            ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName");
-            ViewBag.UserId = new SelectList(db.Users, "UserId", "Username");
+            using (var db = new PlayerInformationSystemEntities())
+            {
+                ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName");
+                ViewBag.UserId = new SelectList(db.Users, "UserId", "Username");
+            }
+            
             return View();
         }
 
@@ -49,17 +59,21 @@ namespace PlayerInformationSystem.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "UserRoleId,UserId,RoleId")] UserRole userRole)
+        public ActionResult Create(UserRole userRole)
         {
             if (ModelState.IsValid)
             {
-                db.UserRoles.Add(userRole);
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                string message = userRoleRepo.Insert(userRole);
+
+                return RedirectToAction(message);
             }
 
-            ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName", userRole.RoleId);
-            ViewBag.UserId = new SelectList(db.Users, "UserId", "Username", userRole.UserId);
+            using (var db = new PlayerInformationSystemEntities())
+            {
+                ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName", userRole.RoleId);
+                ViewBag.UserId = new SelectList(db.Users, "UserId", "Username", userRole.UserId);
+            }
+            
             return View(userRole);
         }
 
@@ -70,13 +84,18 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            UserRole userRole = db.UserRoles.Find(id);
+            UserRole userRole = userRoleRepo.GetDataById(id);
             if (userRole == null)
             {
                 return HttpNotFound();
             }
-            ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName", userRole.RoleId);
-            ViewBag.UserId = new SelectList(db.Users, "UserId", "Username", userRole.UserId);
+
+            using (var db = new PlayerInformationSystemEntities())
+            {
+                ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName", userRole.RoleId);
+                ViewBag.UserId = new SelectList(db.Users, "UserId", "Username", userRole.UserId);
+            }
+
             return View(userRole);
         }
 
@@ -85,16 +104,19 @@ namespace PlayerInformationSystem.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "UserRoleId,UserId,RoleId")] UserRole userRole)
+        public ActionResult Edit(UserRole userRole)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(userRole).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                string message = userRoleRepo.Update(userRole);
+                return RedirectToAction(message);
             }
-            ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName", userRole.RoleId);
-            ViewBag.UserId = new SelectList(db.Users, "UserId", "Username", userRole.UserId);
+
+            using (var db = new PlayerInformationSystemEntities())
+            {
+                ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName", userRole.RoleId);
+                ViewBag.UserId = new SelectList(db.Users, "UserId", "Username", userRole.UserId);
+            }
             return View(userRole);
         }
 
@@ -105,7 +127,7 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            UserRole userRole = db.UserRoles.Find(id);
+            UserRole userRole = userRoleRepo.GetDataById(id);
             if (userRole == null)
             {
                 return HttpNotFound();
@@ -118,9 +140,7 @@ namespace PlayerInformationSystem.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            UserRole userRole = db.UserRoles.Find(id);
-            db.UserRoles.Remove(userRole);
-            db.SaveChanges();
+            userRoleRepo.Delete(id);
             return RedirectToAction("Index");
         }
 
@@ -128,7 +148,10 @@ namespace PlayerInformationSystem.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                using (var db = new PlayerInformationSystemEntities())
+                {
+                    db.Dispose();
+                }
             }
             base.Dispose(disposing);
         }

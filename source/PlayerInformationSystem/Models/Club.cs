@@ -19,7 +19,6 @@ namespace PlayerInformationSystem.Models
         public Club()
         {
             this.Players = new HashSet<Player>();
-            this.Players1 = new HashSet<Player>();
         }
     
         public int ClubId { get; set; }
@@ -29,7 +28,5 @@ namespace PlayerInformationSystem.Models
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Player> Players { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Player> Players1 { get; set; }
     }
 }

@@ -1,23 +1,65 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Script.Services;
+using System.Web.Services;
+using PagedList;
 using PlayerInformationSystem.Models;
+using PlayerInformationSystem.Models.DTO;
+using PlayerInformationSystem.Repository;
 
 namespace PlayerInformationSystem.Controllers
 {
     public class ClubsController : Controller
     {
-        private PlayerInformationSystemEntities db = new PlayerInformationSystemEntities();
-
-        // GET: Clubs
-        public ActionResult Index()
+        #region Constructor  
+        ClubRepository clubRepo;
+        public ClubsController()
         {
-            return View(db.Clubs.ToList());
+            clubRepo = new ClubRepository();
+        }
+        #endregion
+
+        //public ActionResult Index()
+        //{
+        //    return View(clubRepo.GetAllData());
+        //}
+
+        [Authorize(Roles = "Admin")]
+        public ViewResult Index(string sortOrder, string currentFilter, string searchString, int? page)
+        {
+            // Add ViewBag to save SortOrder of table
+            ViewBag.ClubName = String.IsNullOrEmpty(sortOrder) ? "clubname_desc" : "";
+
+            //he search string is changed when a value is entered in the text box and the submit button is pressed. In that case, the searchString parameter is not null.
+            if (searchString != null)
+            {
+                page = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            //ViewBag.CurrentFilter, provides the view with the current filter string.            
+            ViewBag.CurrentFilter = searchString;
+
+            var listPlayers = clubRepo.GetDataClub(sortOrder, searchString);
+
+            //indicates the size of list
+            string pSize = ConfigurationManager.AppSettings["PageSize"];
+            int pageSize = Convert.ToInt32(pSize);
+            //set page to one is there is no value, ??  is called the null-coalescing operator.
+            int pageNumber = (page ?? 1);
+            //return the Model data with paged
+            return View(listPlayers.ToPagedList(pageNumber, pageSize));
+
         }
 
         // GET: Clubs/Details/5
@@ -27,7 +69,7 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Club club = db.Clubs.Find(id);
+            Club club = clubRepo.GetDataById(id);
             if (club == null)
             {
                 return HttpNotFound();
@@ -41,31 +83,27 @@ namespace PlayerInformationSystem.Controllers
             return View();
         }
 
-        // POST: Clubs/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ClubId,ClubName")] Club club)
+        public ActionResult Create(Club club)
         {
             if (ModelState.IsValid)
             {
-                db.Clubs.Add(club);
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                string message = clubRepo.Insert(club);
+                
+                return RedirectToAction(message);
             }
 
             return View(club);
         }
 
-        // GET: Clubs/Edit/5
         public ActionResult Edit(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Club club = db.Clubs.Find(id);
+            Club club = clubRepo.GetDataById(id);
             if (club == null)
             {
                 return HttpNotFound();
@@ -73,18 +111,14 @@ namespace PlayerInformationSystem.Controllers
             return View(club);
         }
 
-        // POST: Clubs/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ClubId,ClubName")] Club club)
+        public ActionResult Edit(Club club)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(club).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                string message = clubRepo.Update(club);
+                return RedirectToAction(message);
             }
             return View(club);
         }
@@ -96,7 +130,7 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Club club = db.Clubs.Find(id);
+            Club club = clubRepo.GetDataById(id);
             if (club == null)
             {
                 return HttpNotFound();
@@ -109,17 +143,30 @@ namespace PlayerInformationSystem.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Club club = db.Clubs.Find(id);
-            db.Clubs.Remove(club);
-            db.SaveChanges();
+            clubRepo.Delete(id);
             return RedirectToAction("Index");
+        }
+        //public JsonResult GetClubs(string search)
+        //{
+        //    var clubs = clubRepo.GetClubName(search);
+        //    return new JsonResult { Data = clubs, JsonRequestBehavior = JsonRequestBehavior.AllowGet };
+        //}
+
+        public JsonResult GetClubs(string search)
+        {
+            List<AutoCompleteModel> allsearch = clubRepo.GetClubName(search);
+
+            return new JsonResult { Data = allsearch, JsonRequestBehavior = JsonRequestBehavior.AllowGet };
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                db.Dispose();
+                using (var db = new PlayerInformationSystemEntities())
+                {
+                    db.Dispose();
+                }                    
             }
             base.Dispose(disposing);
         }

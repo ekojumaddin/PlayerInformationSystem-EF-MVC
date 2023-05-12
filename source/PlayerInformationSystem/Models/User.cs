@@ -11,8 +11,7 @@ namespace PlayerInformationSystem.Models
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
-
+    
     public partial class User
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
@@ -22,12 +21,7 @@ namespace PlayerInformationSystem.Models
         }
     
         public int UserId { get; set; }
-
-        [Required(ErrorMessage = "Username is required")]
         public string Username { get; set; }
-
-        [Required(ErrorMessage = "Password is required")]
-        [DataType(DataType.Password)]
         public string Password { get; set; }
         public string Email { get; set; }
         public Nullable<int> PlayerId { get; set; }

@@ -15,6 +15,8 @@ namespace PlayerInformationSystem.Models.DTO
         [DataType(DataType.Password)]
         public string Password { get; set; }
         public string Email { get; set; }
+
+        [Required(ErrorMessage = "Role is required")]
         public Nullable<int> RoleId { get; set; }
 
         [Display(Name = "Role Name")]
@@ -42,6 +44,12 @@ namespace PlayerInformationSystem.Models.DTO
         [Display(Name = "Club")]
         public Nullable<int> ClubId { get; set; }
         public Nullable<bool> IsActive { get; set; }
+
+        [Display(Name = "Term Contract")]
+        [Range(typeof(bool), "true", "true")]
+        [RegularExpression("True", ErrorMessage = "You must accept the term contract")]
+        //[Required(ErrorMessage = "Term Contract is required checked")]
+        public Nullable<bool> IsTermContract { get; set; }
 
         public virtual Role Role { get; set; }
         public virtual Club Club { get; set; }

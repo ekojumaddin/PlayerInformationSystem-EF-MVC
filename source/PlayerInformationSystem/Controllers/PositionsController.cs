@@ -7,17 +7,26 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using PlayerInformationSystem.Models;
+using PlayerInformationSystem.Repository;
 
 namespace PlayerInformationSystem.Controllers
 {
     public class PositionsController : Controller
     {
+        #region Constructor  
+        PositionRepository positionRepo;
+        public PositionsController()
+        {
+            positionRepo = new PositionRepository();
+        }
+        #endregion
+
         private PlayerInformationSystemEntities db = new PlayerInformationSystemEntities();
 
         // GET: Positions
         public ActionResult Index()
         {
-            return View(db.Positions.ToList());
+            return View(positionRepo.GetAllData());
         }
 
         // GET: Positions/Details/5
@@ -27,7 +36,7 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Position position = db.Positions.Find(id);
+            Position position = positionRepo.GetDataById(id);
             if (position == null)
             {
                 return HttpNotFound();
@@ -46,13 +55,12 @@ namespace PlayerInformationSystem.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "PositionId,Name")] Position position)
+        public ActionResult Create(Position position)
         {
             if (ModelState.IsValid)
             {
-                db.Positions.Add(position);
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                string message = positionRepo.Insert(position);
+                return RedirectToAction(message);
             }
 
             return View(position);
@@ -65,7 +73,7 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Position position = db.Positions.Find(id);
+            Position position = positionRepo.GetDataById(id);
             if (position == null)
             {
                 return HttpNotFound();
@@ -78,13 +86,12 @@ namespace PlayerInformationSystem.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "PositionId,Name")] Position position)
+        public ActionResult Edit(Position position)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(position).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                string message = positionRepo.Update(position);
+                return RedirectToAction(message);
             }
             return View(position);
         }
@@ -96,7 +103,7 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Position position = db.Positions.Find(id);
+            Position position = positionRepo.GetDataById(id);
             if (position == null)
             {
                 return HttpNotFound();
@@ -109,9 +116,7 @@ namespace PlayerInformationSystem.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Position position = db.Positions.Find(id);
-            db.Positions.Remove(position);
-            db.SaveChanges();
+            positionRepo.Delete(id);
             return RedirectToAction("Index");
         }
 
@@ -119,7 +124,10 @@ namespace PlayerInformationSystem.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                using (var db = new PlayerInformationSystemEntities())
+                {
+                    db.Dispose();
+                }
             }
             base.Dispose(disposing);
         }

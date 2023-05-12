@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.Entity;
 using System.Linq;
@@ -7,6 +8,8 @@ using System.Net;
 using System.Web;
 using System.Web.Configuration;
 using System.Web.Mvc;
+using System.Web.Security;
+using PagedList;
 using PlayerInformationSystem.Models;
 using PlayerInformationSystem.Models.DTO;
 using PlayerInformationSystem.Repository;
@@ -17,16 +20,45 @@ namespace PlayerInformationSystem.Controllers
     {
         #region Constructor  
         UserRepository userRepo;
+        PlayerInformationSystemEntities db;
         public UsersController()
         {
             userRepo = new UserRepository();
+            db = new PlayerInformationSystemEntities();
         }
         #endregion
 
-        // GET: Users
-        public ActionResult Index()
+
+        [Authorize(Roles = "Admin")]
+        public ViewResult Index(string sortOrder, string currentFilter, string searchString, int? page)
         {
-            return View(userRepo.GetAllData());
+            // Add ViewBag to save SortOrder of table
+            ViewBag.Username = String.IsNullOrEmpty(sortOrder) ? "username_desc" : "";
+            ViewBag.Email = sortOrder == "email" ? "email_desc" : "email";
+
+            //he search string is changed when a value is entered in the text box and the submit button is pressed. In that case, the searchString parameter is not null.
+            if (searchString != null)
+            {
+                page = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            //ViewBag.CurrentFilter, provides the view with the current filter string.            
+            ViewBag.CurrentFilter = searchString;
+
+            var listUser = userRepo.GetDataByFilter(sortOrder, searchString);
+            
+            //indicates the size of list
+            string pSize = ConfigurationManager.AppSettings["PageSize"];
+            int pageSize = Convert.ToInt32(pSize);
+            //set page to one is there is no value, ??  is called the null-coalescing operator.
+            int pageNumber = (page ?? 1);
+            //return the Model data with paged
+            return View(listUser.ToPagedList(pageNumber, pageSize));
+
         }
 
         // GET: Users/Details/5
@@ -47,14 +79,11 @@ namespace PlayerInformationSystem.Controllers
         // GET: Users/Create
         public ActionResult Create()
         {
-            using (var db = new PlayerInformationSystemEntities())
-            {
-                ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName");
-                ViewBag.ClubId = new SelectList(db.Clubs, "ClubId", "ClubName");
-                ViewBag.GenderId = new SelectList(db.Genders, "GenderId", "Name");
-                ViewBag.PositionId = new SelectList(db.Positions, "PositionId", "Name");
-            }            
-            
+            ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName");
+            ViewBag.ClubId = new SelectList(db.Clubs, "ClubId", "ClubName");
+            ViewBag.GenderId = new SelectList(db.Genders, "GenderId", "Name");
+            ViewBag.PositionId = new SelectList(db.Positions, "PositionId", "Name");
+
             return View();
         }
 
@@ -65,6 +94,11 @@ namespace PlayerInformationSystem.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(UserModel registerUser)
         {
+            ViewBag.RoleId = new SelectList(db.Roles, "RoleId", "RoleName");
+            ViewBag.ClubId = new SelectList(db.Clubs, "ClubId", "ClubName");
+            ViewBag.GenderId = new SelectList(db.Genders, "GenderId", "Name");
+            ViewBag.PositionId = new SelectList(db.Positions, "PositionId", "Name");
+
             if (ModelState.IsValid)
             {
                 var user = userRepo.Insert(registerUser);
@@ -143,10 +177,10 @@ namespace PlayerInformationSystem.Controllers
         {
             if (disposing)
             {
-                using (var db = new PlayerInformationSystemEntities())
-                {
+                //using (var db = new PlayerInformationSystemEntities())
+                //{
                     db.Dispose();
-                }
+                //}
             }
             base.Dispose(disposing);
         }

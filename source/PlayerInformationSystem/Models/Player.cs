@@ -51,9 +51,9 @@ namespace PlayerInformationSystem.Models
         [DataType(DataType.Date)]
         [Display(Name = "Expired Date")]
         public Nullable<System.DateTime> ExpiredDate { get; set; }
+        public Nullable<bool> IsTermContract { get; set; }
     
         public virtual Club Club { get; set; }
-        public virtual Club Club1 { get; set; }
         public virtual Gender Gender { get; set; }
         public virtual Position Position { get; set; }
     }

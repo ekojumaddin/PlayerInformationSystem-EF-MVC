@@ -7,17 +7,24 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using PlayerInformationSystem.Models;
+using PlayerInformationSystem.Repository;
 
 namespace PlayerInformationSystem.Controllers
 {
     public class RolesController : Controller
     {
-        private PlayerInformationSystemEntities db = new PlayerInformationSystemEntities();
+        #region Constructor  
+        RoleRepository roleRepo;
+        public RolesController()
+        {
+            roleRepo = new RoleRepository();
+        }
+        #endregion
 
         // GET: Roles
         public ActionResult Index()
         {
-            return View(db.Roles.ToList());
+            return View(roleRepo.GetAllData());
         }
 
         // GET: Roles/Details/5
@@ -27,7 +34,7 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Role role = db.Roles.Find(id);
+            Role role = roleRepo.GetDataById(id);
             if (role == null)
             {
                 return HttpNotFound();
@@ -46,13 +53,12 @@ namespace PlayerInformationSystem.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "RoleId,RoleName")] Role role)
+        public ActionResult Create(Role role)
         {
             if (ModelState.IsValid)
             {
-                db.Roles.Add(role);
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                string message = roleRepo.Insert(role);
+                return RedirectToAction(message);
             }
 
             return View(role);
@@ -65,7 +71,7 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Role role = db.Roles.Find(id);
+            Role role = roleRepo.GetDataById(id);
             if (role == null)
             {
                 return HttpNotFound();
@@ -78,13 +84,12 @@ namespace PlayerInformationSystem.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "RoleId,RoleName")] Role role)
+        public ActionResult Edit(Role role)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(role).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                string message = roleRepo.Update(role);
+                return RedirectToAction(message);
             }
             return View(role);
         }
@@ -96,7 +101,7 @@ namespace PlayerInformationSystem.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Role role = db.Roles.Find(id);
+            Role role = roleRepo.GetDataById(id);
             if (role == null)
             {
                 return HttpNotFound();
@@ -109,9 +114,7 @@ namespace PlayerInformationSystem.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Role role = db.Roles.Find(id);
-            db.Roles.Remove(role);
-            db.SaveChanges();
+            roleRepo.Delete(id);
             return RedirectToAction("Index");
         }
 
@@ -119,7 +122,10 @@ namespace PlayerInformationSystem.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                using (var db = new PlayerInformationSystemEntities())
+                {
+                    db.Dispose();
+                }
             }
             base.Dispose(disposing);
         }

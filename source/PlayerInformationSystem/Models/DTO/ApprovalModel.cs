@@ -37,5 +37,7 @@ namespace PlayerInformationSystem.Models.DTO
         [Display(Name = "Expired Date")]
         [DataType(DataType.Date)]
         public DateTime? expiredDate { get; set; }
+
+        public string CreatedBy { get; set; }
     }
 }

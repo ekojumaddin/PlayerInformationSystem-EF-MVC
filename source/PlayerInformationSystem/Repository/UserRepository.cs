@@ -6,6 +6,7 @@ using PlayerInformationSystem.Models.DTO;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Core.Metadata.Edm;
 using System.Linq;
 using System.Web;
 
@@ -35,7 +36,18 @@ namespace PlayerInformationSystem.Repository
 
         public void Delete(int? paramTxtId, PlayerInformationSystemEntities context)
         {
-            User user = context.Users.Find(paramTxtId);
+            var userRole = context.UserRoles.Where(u => u.UserId == paramTxtId).ToList();
+
+            if (userRole != null)
+            {
+                foreach (var role in userRole)
+                {
+                    context.UserRoles.Remove(role);
+                    context.SaveChanges();
+                }
+            }
+
+            var user = context.Users.Find(paramTxtId);
             context.Users.Remove(user);
             context.SaveChanges();
         }
@@ -149,6 +161,7 @@ namespace PlayerInformationSystem.Repository
                 player.ClubId = paramData.ClubId;
                 player.ExpiredDate = paramData.ExpiredDate;
                 player.IsActive = false;
+                player.IsTermContract = paramData.IsTermContract;
                 player.CreatedBy = paramData.Username;
                 player.CreatedTime = DateTime.Now;
 
@@ -185,6 +198,53 @@ namespace PlayerInformationSystem.Repository
             paramData.RoleName = role.RoleName;
 
             return paramData;
+        }
+
+        public List<User> GetDataByFilter(string sortOrder, string searchString)
+        {
+            try
+            {
+                var listUser = new List<User>();
+
+                using (var context = new PlayerInformationSystemEntities())
+                {
+                    var model = from s in context.Users
+                                select s;
+
+                    if (!String.IsNullOrEmpty(searchString))
+                    {
+                        model = model.Where(s => s.Username.Contains(searchString)
+                                               || s.Email.Contains(searchString));
+                    }
+
+                    //Switch action according to sortOrder
+                    switch (sortOrder)
+                    {
+                        case "username_desc":
+                            listUser = model.OrderByDescending(s => s.Username).ToList();
+                            break;
+
+                        case "email_desc":
+                            listUser = model.OrderByDescending(s => s.Email).ToList();
+                            break;
+
+                        case "email":
+                            listUser = model.OrderBy(s => s.Email).ToList();
+                            break;
+
+                        default:
+                            listUser = model.OrderBy(s => s.Username).ToList();
+                            break;
+                    }
+
+                    return listUser.ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex.Message);
+                throw;
+            }
         }
     }
 }
